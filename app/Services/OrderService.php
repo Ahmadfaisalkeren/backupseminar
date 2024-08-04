@@ -72,7 +72,7 @@ class OrderService
             'amount' => (int) $request->input('amount'),
             'payer_email' => $request->input('email') ?? 'default@example.com',
             'description' => 'Payment for seminar',
-            'invoice_duration' => 180,
+            'invoice_duration' => 60,
             'items' => [$items],
         ]);
 
@@ -109,54 +109,54 @@ class OrderService
                 }
                 broadcast(new OrderStatusUpdated($order));
                 broadcast(new OrderPaid($order));
-            } else {
+            } elseif ($request->status == 'EXPIRED') {
                 $order->update(['status' => 'failed']);
                 broadcast(new OrderStatusUpdated($order));
             }
         }
     }
 
-    public function handlePaymentCompletedCallback(Request $request)
-    {
-        $getToken = $request->headers->get('x-callback-token');
-        $callbackToken = env('XENDIT_CALLBACK_TOKEN');
+    // public function handlePaymentCompletedCallback(Request $request)
+    // {
+    //     $getToken = $request->headers->get('x-callback-token');
+    //     $callbackToken = env('XENDIT_CALLBACK_TOKEN');
 
-        if (!$callbackToken) {
-            throw new \Exception("Callback token xendit not found", Response::HTTP_NOT_FOUND);
-        }
+    //     if (!$callbackToken) {
+    //         throw new \Exception("Callback token xendit not found", Response::HTTP_NOT_FOUND);
+    //     }
 
-        if ($getToken !== $callbackToken) {
-            throw new \Exception("Callback token not valid", Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+    //     if ($getToken !== $callbackToken) {
+    //         throw new \Exception("Callback token not valid", Response::HTTP_INTERNAL_SERVER_ERROR);
+    //     }
 
-        $order = Order::where('external_id', $request->input('external_id'))->first();
+    //     $order = Order::where('external_id', $request->input('external_id'))->first();
 
-        if ($order) {
-            if ($request->status == 'COMPLETED') {
-                $order->update(['status' => 'completed']);
-                broadcast(new OrderStatusUpdated($order));
-            }
-        }
-    }
+    //     if ($order) {
+    //         if ($request->status == 'COMPLETED') {
+    //             $order->update(['status' => 'completed']);
+    //             broadcast(new OrderStatusUpdated($order));
+    //         }
+    //     }
+    // }
 
-    public function handlePaymentExpiredCallback(Request $request)
-    {
-        $getToken = $request->headers->get('x-callback-token');
-        $callbackToken = env('XENDIT_CALLBACK_TOKEN');
+    // public function handlePaymentExpiredCallback(Request $request)
+    // {
+    //     $getToken = $request->headers->get('x-callback-token');
+    //     $callbackToken = env('XENDIT_CALLBACK_TOKEN');
 
-        if (!$callbackToken) {
-            throw new \Exception("Callback token xendit not found", Response::HTTP_NOT_FOUND);
-        }
+    //     if (!$callbackToken) {
+    //         throw new \Exception("Callback token xendit not found", Response::HTTP_NOT_FOUND);
+    //     }
 
-        if ($getToken !== $callbackToken) {
-            throw new \Exception("Callback token not valid", Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+    //     if ($getToken !== $callbackToken) {
+    //         throw new \Exception("Callback token not valid", Response::HTTP_INTERNAL_SERVER_ERROR);
+    //     }
 
-        $order = Order::where('external_id', $request->input('external_id'))->first();
+    //     $order = Order::where('external_id', $request->input('external_id'))->first();
 
-        if ($order && $request->status == 'EXPIRED') {
-            $order->update(['status' => 'failed']);
-            broadcast(new OrderStatusUpdated($order));
-        }
-    }
+    //     if ($order && $request->status == 'EXPIRED') {
+    //         $order->update(['status' => 'failed']);
+    //         broadcast(new OrderStatusUpdated($order));
+    //     }
+    // }
 }
